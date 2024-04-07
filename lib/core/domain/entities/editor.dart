@@ -4,6 +4,7 @@ class EditorDataEntity {
   final bool onEdit;
   final int activeRecordIdx;
   final bool onPreview;
+  final bool onSplitMode;
 
   EditorDataEntity({
     required this.recordDatas,
@@ -11,6 +12,7 @@ class EditorDataEntity {
     required this.activeRecordIdx,
     required this.onEdit,
     required this.onPreview,
+    required this.onSplitMode,
   });
 
   EditorDataEntity copyWith({
@@ -18,6 +20,7 @@ class EditorDataEntity {
     String? currentData,
     bool? onEdit,
     bool? onPreview,
+    bool? onSplitMode,
     int? activeRecordIdx,
   }) =>
       EditorDataEntity(
@@ -26,5 +29,6 @@ class EditorDataEntity {
         activeRecordIdx: activeRecordIdx ?? this.activeRecordIdx,
         onEdit: onEdit ?? this.onEdit,
         onPreview: onPreview ?? this.onPreview,
+        onSplitMode: onSplitMode ?? this.onSplitMode,
       );
 }

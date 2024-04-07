@@ -3,10 +3,10 @@ import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/edit_topbar.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/editor_field.dart';
+import 'package:file_io_simple/core/presentation/editor/widgets/preview_field.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:markdown/markdown.dart' as md;
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class EditorView extends StatefulWidget {
@@ -21,6 +21,7 @@ class EditorView extends StatefulWidget {
 
 class _EditorViewState extends State<EditorView> {
   final TextEditingController textEditingController = TextEditingController();
+  double posY = 0.0;
   @override
   void initState() {
     super.initState();
@@ -39,9 +40,12 @@ class _EditorViewState extends State<EditorView> {
 
   @override
   Widget build(BuildContext context) {
+    final fullHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Consumer<EditorProvider>(
         builder: (context, EditorProvider provider, _) => Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             provider.editorData?.onEdit ?? false
                 ? ToolbarEditor(
@@ -60,32 +64,78 @@ class _EditorViewState extends State<EditorView> {
                       listDots: () {},
                       listNumber: () {},
                       checkBox: () {},
+                      togglePreview: () => provider.togglePreview(),
+                      toggleSplitView: () => provider.toggleSplitMode(),
                     ),
                     onPressedSave: () => provider.saveFile())
                 : EditTopBar(onPressed: () => provider.startEditing()),
             Expanded(
-              flex: 1,
+              flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
               child: Container(
+                height: (provider.editorData?.onSplitMode == true)
+                    ? fullHeight / 2 + (32 + posY)
+                    : null,
                 padding: EditorView._padding,
-                child: !(provider.editorData?.onPreview ?? false) &&
-                        (provider.editorData?.onEdit ?? false)
+                child: (provider.editorData?.onPreview == false) &&
+                        (provider.editorData?.onEdit == true)
                     ? EditorField(
                         onUpdate: (value) => provider.updateMarkdown(value),
                         textEditingController: textEditingController,
                       )
-                    : Markdown(
-                        selectable: true,
-                        extensionSet: md.ExtensionSet(
-                          md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                          <md.InlineSyntax>[
-                            md.EmojiSyntax(),
-                            ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes
-                          ],
-                        ),
+                    : PreviewField(
                         data: provider.editorData?.currentData ?? "-",
                       ),
               ),
             ),
+            if (provider.editorData?.onSplitMode == true)
+              Container(
+                  height: 32,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (DragUpdateDetails details) {
+                      // print(fullHeight);
+                      print(details.globalPosition.dy);
+
+                      if (details.globalPosition.dy + 32 < fullHeight &&
+                          details.globalPosition.dy > 162) {
+                        setState(() {
+                          double delta = details.delta.dy;
+                          posY += delta;
+                        });
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        Divider(
+                          height: 8,
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                        ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(20))),
+                            height: 24.0,
+                            width: 48.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            if (provider.editorData?.onSplitMode == true)
+              Expanded(
+                child: Container(
+                  padding: EditorView._padding,
+                  child: PreviewField(
+                    data: provider.editorData?.currentData ?? "-",
+                  ),
+                ),
+              ),
           ],
         ),
       ),

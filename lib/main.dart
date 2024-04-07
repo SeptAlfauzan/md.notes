@@ -17,7 +17,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My Markdowns',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData.dark(
         useMaterial3: true,
       ),
       initialRoute: HomeView.route,

@@ -1,26 +1,39 @@
 import 'package:file_io_simple/core/domain/entities/editor.dart';
 import 'package:file_io_simple/core/domain/entities/notes.dart';
+import 'package:file_io_simple/core/utils/helper/debouncer_helper.dart';
 import 'package:flutter/foundation.dart';
 
 class EditorProvider extends ChangeNotifier {
   EditorDataEntity? _editorData;
   EditorDataEntity? get editorData => _editorData;
+  late Debouncer _debouncer;
+
+  EditorProvider() {
+    _debouncer = Debouncer(milliseconds: 400);
+  }
 
   Future<void> initializeEditor(Notes noteData) async {
     final newData = EditorDataEntity(
-      recordDatas: [noteData.data],
-      currentData: noteData.data,
-      activeRecordIdx: 0,
-      onEdit: false,
-      onPreview: false,
-    );
+        recordDatas: [noteData.data],
+        currentData: noteData.data,
+        activeRecordIdx: 0,
+        onEdit: false,
+        onPreview: false,
+        onSplitMode: false);
     _editorData = newData;
     notifyListeners();
   }
 
   Future<void> togglePreview() async {
-    _editorData =
-        _editorData?.copyWith(onPreview: !(_editorData?.onPreview ?? false));
+    _editorData = _editorData?.copyWith(
+        onSplitMode: false, onPreview: !(_editorData?.onPreview ?? false));
+    notifyListeners();
+  }
+
+  Future<void> toggleSplitMode() async {
+    _editorData = _editorData?.copyWith(
+        onPreview: false, onSplitMode: !(_editorData?.onSplitMode ?? false));
+    notifyListeners();
   }
 
   Future<void> startEditing() async {
@@ -36,15 +49,11 @@ class EditorProvider extends ChangeNotifier {
   }
 
   Future<void> updateMarkdown(String arg) async {
-    final currentRecord = _editorData!.recordDatas;
-    currentRecord.add(arg);
-    print(currentRecord[1]);
     _editorData = _editorData?.copyWith(
       currentData: arg,
-      recordDatas: currentRecord,
-      activeRecordIdx: currentRecord.length - 1,
     );
     notifyListeners();
+    _debouncer.run(() => _updateRecordEditor(arg));
   }
 
   Future<void> undo() async {
@@ -71,13 +80,14 @@ class EditorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateRecordEditor() async {
-    // final lastRecord = _editorData?.recordDatas;
-    // final currentData = _editorData?.currentData;
-    // final currentRecordIdx = (_editorData?.recordDatas.length ?? 0) - 1;
-
-    // lastRecord?.removeRange(currentData ?? "-");
-
-    // _editorData = _editorData?.copyWith(recordDatas: lastRecord);
+  Future<void> _updateRecordEditor(String arg) async {
+    print("update record of editing");
+    final currentRecord = _editorData!.recordDatas;
+    currentRecord.add(arg);
+    _editorData = _editorData?.copyWith(
+      recordDatas: currentRecord,
+      activeRecordIdx: currentRecord.length - 1,
+    );
+    notifyListeners();
   }
 }

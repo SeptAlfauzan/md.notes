@@ -1,5 +1,7 @@
 import 'package:file_io_simple/core/domain/entities/editor_tools.dart';
+import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ToolbarEditor extends StatefulWidget {
   static const _padding = EdgeInsets.only(left: 24, right: 24, top: 24);
@@ -26,6 +28,7 @@ class _ToolbarEditorState extends State<ToolbarEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final dataFromProvider = Provider.of<EditorProvider>(context).editorData;
     return Padding(
       padding: ToolbarEditor._padding,
       child: Column(
@@ -45,12 +48,26 @@ class _ToolbarEditorState extends State<ToolbarEditor> {
                 ),
               ),
               const Spacer(flex: 1),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.preview)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.splitscreen)),
+              IconButton(
+                  onPressed: () => widget.editorTools.togglePreview(),
+                  icon: Icon(dataFromProvider?.onPreview ?? true
+                      ? Icons.remove_red_eye
+                      : Icons.remove_red_eye_outlined),
+                  color: dataFromProvider?.onPreview ?? true
+                      ? Colors.blueAccent
+                      : null),
+              IconButton(
+                  onPressed: () => widget.editorTools.toggleSplitView(),
+                  icon: Icon(
+                    Icons.splitscreen,
+                    color: dataFromProvider?.onSplitMode ?? true
+                        ? Colors.blueAccent
+                        : null,
+                  )),
             ],
           ),
           Container(
-            color: Colors.blueGrey[50],
+            color: Theme.of(context).colorScheme.secondaryContainer,
             child: Row(
               children: [
                 if (!_openMoreButtons) ...mainButtons() else ..._moreButtons(),
