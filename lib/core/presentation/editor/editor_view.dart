@@ -2,6 +2,7 @@ import 'package:file_io_simple/core/domain/entities/editor_tools.dart';
 import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/edit_topbar.dart';
+import 'package:file_io_simple/core/presentation/editor/widgets/editor_field.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -22,34 +23,22 @@ class _EditorViewState extends State<EditorView> {
   final TextEditingController textEditingController = TextEditingController();
   @override
   void initState() {
+    super.initState();
     Future.microtask(() {
       textEditingController.value = const TextEditingValue(text: _markdownData);
       Provider.of<EditorProvider>(context, listen: false).initializeEditor(
           Notes(id: "1", data: _markdownData, created: DateTime.now()));
     });
-    super.initState();
-
-    textEditingController.addListener(_printLatestValue);
-  }
-
-  void _printLatestValue() {
-    final text = textEditingController.text;
-    // Future.microtask(() {
-    //   Provider.of<EditorProvider>(context, listen: false).updateMarkdown(text);
-    // });
   }
 
   @override
   void dispose() {
-    // Clean up the controller when the widget is removed from the
-    // widget tree.
     textEditingController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final _fullHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Consumer<EditorProvider>(
         builder: (context, EditorProvider provider, _) => Column(
@@ -80,28 +69,9 @@ class _EditorViewState extends State<EditorView> {
                 padding: EditorView._padding,
                 child: !(provider.editorData?.onPreview ?? false) &&
                         (provider.editorData?.onEdit ?? false)
-                    ? TextField(
-                        onChanged: (value) => provider.updateMarkdown(value),
-                        maxLines: null,
-                        expands: true,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          focusColor: Colors.red,
-                          contentPadding: const EdgeInsets.only(
-                              left: 14.0, bottom: 8.0, top: 8.0),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                            borderRadius: BorderRadius.circular(25.7),
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                            borderRadius: BorderRadius.circular(25.7),
-                          ),
-                        ),
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        controller: textEditingController,
+                    ? EditorField(
+                        onUpdate: (value) => provider.updateMarkdown(value),
+                        textEditingController: textEditingController,
                       )
                     : Markdown(
                         selectable: true,

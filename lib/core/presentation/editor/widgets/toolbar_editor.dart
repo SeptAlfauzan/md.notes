@@ -1,7 +1,5 @@
 import 'package:file_io_simple/core/domain/entities/editor_tools.dart';
-import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class ToolbarEditor extends StatefulWidget {
   static const _padding = EdgeInsets.only(left: 24, right: 24, top: 24);
