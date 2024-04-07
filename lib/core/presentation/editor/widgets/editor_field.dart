@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 class EditorField extends StatelessWidget {
   final Function(String) onUpdate;
   final TextEditingController textEditingController;
-  const EditorField(
-      {super.key, required this.onUpdate, required this.textEditingController});
+  final FocusNode focusNode;
+  const EditorField({
+    super.key,
+    required this.onUpdate,
+    required this.textEditingController,
+    required this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      focusNode: focusNode,
       onChanged: onUpdate,
       maxLines: null,
       expands: true,

@@ -5,15 +5,19 @@ import 'package:file_io_simple/core/presentation/editor/widgets/edit_topbar.dart
 import 'package:file_io_simple/core/presentation/editor/widgets/editor_field.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/preview_field.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
+import 'package:file_io_simple/core/presentation/editor/widgets/vertical_devider_split_mode.dart';
+import 'package:file_io_simple/core/presentation/widgets/alert_popup.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class EditorView extends StatefulWidget {
   static const String route = "editor_route";
+  final bool isCreateNewFile;
   static const _padding = EdgeInsets.only(left: 24, right: 24, top: 24);
 
-  const EditorView({super.key});
+  const EditorView({super.key, required this.isCreateNewFile});
 
   @override
   State<EditorView> createState() => _EditorViewState();
@@ -21,14 +25,39 @@ class EditorView extends StatefulWidget {
 
 class _EditorViewState extends State<EditorView> {
   final TextEditingController textEditingController = TextEditingController();
+  final focusNode = FocusNode();
+
   double posY = 0.0;
+
+  Future<String> readMarkdownFile() async {
+    try {
+      String contents = await rootBundle.loadString('assets/md/test.md');
+
+      return contents;
+    } catch (e) {
+      // If encountering an error, return 0.
+      print(e);
+      rethrow;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      textEditingController.value = const TextEditingValue(text: _markdownData);
-      Provider.of<EditorProvider>(context, listen: false).initializeEditor(
-          Notes(id: "1", data: _markdownData, created: DateTime.now()));
+    Future.microtask(() async {
+      textEditingController.value = TextEditingValue(
+        text: widget.isCreateNewFile ? "" : await readMarkdownFile(),
+      );
+      Provider.of<EditorProvider>(context, listen: false)
+          .initializeEditor(Notes(
+        id: const Uuid().toString(),
+        data: widget.isCreateNewFile ? "" : await readMarkdownFile(),
+        created: DateTime.now(),
+      ));
+      if (widget.isCreateNewFile) {
+        Provider.of<EditorProvider>(context, listen: false).startEditing();
+        focusNode.requestFocus();
+      }
     });
   }
 
@@ -42,101 +71,85 @@ class _EditorViewState extends State<EditorView> {
   Widget build(BuildContext context) {
     final fullHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: Consumer<EditorProvider>(
-        builder: (context, EditorProvider provider, _) => Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            provider.editorData?.onEdit ?? false
-                ? ToolbarEditor(
-                    editorTools: EditorTools(
-                      undo: () {
-                        provider.undo();
-                        textEditingController.value = TextEditingValue(
-                            text: provider.editorData?.currentData ?? "-");
-                      },
-                      redo: () {
-                        provider.redo();
-                        textEditingController.value = TextEditingValue(
-                            text: provider.editorData?.currentData ?? "-");
-                      },
-                      importImg: () {},
-                      listDots: () {},
-                      listNumber: () {},
-                      checkBox: () {},
-                      togglePreview: () => provider.togglePreview(),
-                      toggleSplitView: () => provider.toggleSplitMode(),
-                    ),
-                    onPressedSave: () => provider.saveFile())
-                : EditTopBar(onPressed: () => provider.startEditing()),
-            Expanded(
-              flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
-              child: Container(
-                height: (provider.editorData?.onSplitMode == true)
-                    ? fullHeight / 2 + (32 + posY)
-                    : null,
-                padding: EditorView._padding,
-                child: (provider.editorData?.onPreview == false) &&
-                        (provider.editorData?.onEdit == true)
-                    ? EditorField(
-                        onUpdate: (value) => provider.updateMarkdown(value),
-                        textEditingController: textEditingController,
-                      )
-                    : PreviewField(
-                        data: provider.editorData?.currentData ?? "-",
+    return PopScope(
+      canPop: Provider.of<EditorProvider>(context).editorData?.onEdit == true
+          ? false
+          : true,
+      onPopInvoked: (bool didPop) async {
+        if (!didPop) {
+          triggerAlert(
+              title: "You're still in edit mode!",
+              text: "Please save your work first.",
+              context: context);
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Consumer<EditorProvider>(
+          builder: (context, EditorProvider provider, _) => Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              provider.editorData?.onEdit ?? false
+                  ? ToolbarEditor(
+                      editorTools: EditorTools(
+                        undo: () {
+                          provider.undo();
+                          textEditingController.value = TextEditingValue(
+                              text: provider.editorData?.currentData ?? "-");
+                        },
+                        redo: () {
+                          provider.redo();
+                          textEditingController.value = TextEditingValue(
+                              text: provider.editorData?.currentData ?? "-");
+                        },
+                        importImg: () {},
+                        listDots: () {},
+                        listNumber: () {},
+                        checkBox: () {},
+                        togglePreview: () => provider.togglePreview(),
+                        toggleSplitView: () => provider.toggleSplitMode(),
                       ),
-              ),
-            ),
-            if (provider.editorData?.onSplitMode == true)
-              Container(
-                  height: 32,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-                  child: GestureDetector(
-                    onVerticalDragUpdate: (DragUpdateDetails details) {
-                      // print(fullHeight);
-                      print(details.globalPosition.dy);
-
-                      if (details.globalPosition.dy + 32 < fullHeight &&
-                          details.globalPosition.dy > 162) {
-                        setState(() {
-                          double delta = details.delta.dy;
-                          posY += delta;
-                        });
-                      }
-                    },
-                    child: Stack(
-                      children: [
-                        Divider(
-                          height: 8,
-                          color:
-                              Theme.of(context).colorScheme.secondaryContainer,
-                        ),
-                        Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color:
-                                    Theme.of(context).colorScheme.onBackground,
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(20))),
-                            height: 24.0,
-                            width: 48.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-            if (provider.editorData?.onSplitMode == true)
+                      onPressedSave: () => provider.saveFile())
+                  : EditTopBar(onPressed: () => provider.startEditing()),
               Expanded(
+                flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
                 child: Container(
+                  height: (provider.editorData?.onSplitMode == true)
+                      ? fullHeight / 2 + (32 + posY)
+                      : null,
                   padding: EditorView._padding,
-                  child: PreviewField(
-                    data: provider.editorData?.currentData ?? "-",
-                  ),
+                  child: (provider.editorData?.onPreview == false) &&
+                          (provider.editorData?.onEdit == true)
+                      ? EditorField(
+                          focusNode: focusNode,
+                          onUpdate: (value) => provider.updateMarkdown(value),
+                          textEditingController: textEditingController,
+                        )
+                      : PreviewField(
+                          data: provider.editorData?.currentData ?? "-",
+                        ),
                 ),
               ),
-          ],
+              if (provider.editorData?.onSplitMode == true)
+                VerticalDividerSplitMode(
+                  updateVerticalPosition: (value) {
+                    setState(() {
+                      posY += value;
+                    });
+                  },
+                  fullHeightScreen: fullHeight,
+                ),
+              if (provider.editorData?.onSplitMode == true)
+                Expanded(
+                  child: Container(
+                    padding: EditorView._padding,
+                    child: PreviewField(
+                      data: provider.editorData?.currentData ?? "-",
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

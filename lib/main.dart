@@ -28,7 +28,11 @@ class MyApp extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         HomeView.route: (context) => const HomeView(),
         EditorView.route: (context) => ChangeNotifierProvider<EditorProvider>(
-            create: (context) => EditorProvider(), child: const EditorView()),
+            create: (context) => EditorProvider(),
+            child: EditorView(
+              isCreateNewFile:
+                  ModalRoute.of(context)?.settings.arguments as bool,
+            )),
       },
     );
   }

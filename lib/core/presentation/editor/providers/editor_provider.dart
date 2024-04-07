@@ -44,7 +44,7 @@ class EditorProvider extends ChangeNotifier {
 
   Future<void> saveFile() async {
     print("close editing");
-    _editorData = _editorData?.copyWith(onEdit: false);
+    _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
     notifyListeners();
   }
 

@@ -10,7 +10,11 @@ class HomeView extends StatelessWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.note_add),
-          onPressed: () => Navigator.pushNamed(context, EditorView.route)),
+          onPressed: () => Navigator.pushNamed(
+                context,
+                EditorView.route,
+                arguments: true,
+              )),
     );
   }
 }
