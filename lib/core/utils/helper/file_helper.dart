@@ -27,6 +27,7 @@ class FileHelper {
 
   static Future<File> createNewFile(String title, String content) async {
     final filePath = await getFilePath(title);
+    print('.😀 $filePath');
     return await writeFile(filePath, content);
   }
 
@@ -37,4 +38,16 @@ class FileHelper {
         dir.listSync().where((file) => file.path.contains(".md")).toList();
     return files;
   }
+
+  static Future<bool> checkFileExist(String path) async {
+    try {
+      final result = await File(path).exists();
+      return result;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<FileSystemEntity> deleteFile(String path) async =>
+      await File(path).delete();
 }

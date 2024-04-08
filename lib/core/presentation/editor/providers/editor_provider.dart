@@ -1,18 +1,21 @@
 import 'package:file_io_simple/core/domain/entities/editor.dart';
 import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/utils/helper/debouncer_helper.dart';
+import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/foundation.dart';
 
 class EditorProvider extends ChangeNotifier {
   EditorDataEntity? _editorData;
   EditorDataEntity? get editorData => _editorData;
   late Debouncer _debouncer;
+  late Notes _notes;
 
   EditorProvider() {
     _debouncer = Debouncer(milliseconds: 400);
   }
 
   Future<void> initializeEditor(Notes noteData) async {
+    _notes = noteData;
     final newData = EditorDataEntity(
         recordDatas: [noteData.data],
         currentData: noteData.data,
@@ -44,8 +47,21 @@ class EditorProvider extends ChangeNotifier {
 
   Future<void> saveFile() async {
     print("close editing");
-    _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
-    notifyListeners();
+    try {
+      final filePath = await FileHelper.getFilePath(_notes.id);
+      final isFileExist = await FileHelper.checkFileExist(filePath);
+      final content = _editorData?.currentData ?? "-";
+      print("notes id adalah ${_notes.id}");
+      if (isFileExist) {
+        await FileHelper.writeFile(filePath, content);
+      } else {
+        await FileHelper.createNewFile(_notes.id, content);
+      }
+      _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
+      notifyListeners();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   Future<void> updateMarkdown(String arg) async {

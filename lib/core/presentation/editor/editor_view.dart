@@ -7,17 +7,18 @@ import 'package:file_io_simple/core/presentation/editor/widgets/preview_field.da
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/vertical_devider_split_mode.dart';
 import 'package:file_io_simple/core/presentation/widgets/alert_popup.dart';
+import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
 class EditorView extends StatefulWidget {
   static const String route = "editor_route";
-  final bool isCreateNewFile;
+  final String? filePath;
   static const _padding = EdgeInsets.only(left: 24, right: 24, top: 24);
 
-  const EditorView({super.key, required this.isCreateNewFile});
+  const EditorView({super.key, this.filePath});
 
   @override
   State<EditorView> createState() => _EditorViewState();
@@ -29,11 +30,14 @@ class _EditorViewState extends State<EditorView> {
 
   double posY = 0.0;
 
-  Future<String> readMarkdownFile() async {
+  Future<Notes> readMarkdownFile() async {
     try {
-      String contents = await rootBundle.loadString('assets/md/test.md');
-
-      return contents;
+      final String contents = await FileHelper.readFile(widget.filePath ?? "");
+      String filename = path.basename(widget.filePath ?? "");
+      return Notes(
+          id: filename.replaceAll(".md", ""),
+          data: contents,
+          created: DateTime.now()); //TODO: replace this create datetime
     } catch (e) {
       // If encountering an error, return 0.
       print(e);
@@ -44,17 +48,21 @@ class _EditorViewState extends State<EditorView> {
   @override
   void initState() {
     super.initState();
+    final bool isCreateNewFile = widget.filePath == null ? true : false;
+
     Future.microtask(() async {
       textEditingController.value = TextEditingValue(
-        text: widget.isCreateNewFile ? "" : await readMarkdownFile(),
+        text: isCreateNewFile ? "" : (await readMarkdownFile()).data,
       );
       Provider.of<EditorProvider>(context, listen: false)
           .initializeEditor(Notes(
-        id: const Uuid().toString(),
-        data: widget.isCreateNewFile ? "" : await readMarkdownFile(),
-        created: DateTime.now(),
+        id: isCreateNewFile ? const Uuid().v4() : (await readMarkdownFile()).id,
+        data: isCreateNewFile ? "" : (await readMarkdownFile()).data,
+        created: isCreateNewFile
+            ? DateTime.now()
+            : (await readMarkdownFile()).created,
       ));
-      if (widget.isCreateNewFile) {
+      if (isCreateNewFile) {
         Provider.of<EditorProvider>(context, listen: false).startEditing();
         focusNode.requestFocus();
       }
@@ -109,7 +117,9 @@ class _EditorViewState extends State<EditorView> {
                         togglePreview: () => provider.togglePreview(),
                         toggleSplitView: () => provider.toggleSplitMode(),
                       ),
-                      onPressedSave: () => provider.saveFile())
+                      onPressedSave: () {
+                        provider.saveFile();
+                      })
                   : EditTopBar(onPressed: () => provider.startEditing()),
               Expanded(
                 flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
@@ -155,21 +165,3 @@ class _EditorViewState extends State<EditorView> {
     );
   }
 }
-
-const String _markdownData = """
-# Minimal Markdown Test
----
-😀
-This is a simple Markdown test. Provide a text string with Markdown tags
-to the Markdown widget and it will display the formatted output in a
-scrollable widget.
-## Section 1
-Maecenas eget **arcu egestas**, mollis ex vitae, posuere magna. Nunc eget
-aliquam tortor. Vestibulum porta sodales efficitur. Mauris interdum turpis
-eget est condimentum, vitae porttitor diam ornare.
-### Subsection A
-Sed et massa finibus, blandit massa vel, vulputate velit. Vestibulum vitae
-venenatis libero. **__Curabitur sem lectus, feugiat eu justo in, eleifend
-accumsan ante.__** Sed a fermentum elit. Curabitur sodales metus id mi
-ornare, in ullamcorper magna congue.
-""";

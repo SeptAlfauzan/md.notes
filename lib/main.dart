@@ -1,6 +1,7 @@
 import 'package:file_io_simple/core/presentation/editor/editor_view.dart';
 import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:file_io_simple/core/presentation/home/home_view.dart';
+import 'package:file_io_simple/core/presentation/home/providers/notes_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,12 +27,14 @@ class MyApp extends StatelessWidget {
       initialRoute: HomeView.route,
       debugShowCheckedModeBanner: false,
       routes: <String, WidgetBuilder>{
-        HomeView.route: (context) => const HomeView(),
+        HomeView.route: (context) => ChangeNotifierProvider<NotesProvider>(
+              create: (context) => NotesProvider(),
+              child: const HomeView(),
+            ),
         EditorView.route: (context) => ChangeNotifierProvider<EditorProvider>(
             create: (context) => EditorProvider(),
             child: EditorView(
-              isCreateNewFile:
-                  ModalRoute.of(context)?.settings.arguments as bool,
+              filePath: ModalRoute.of(context)?.settings.arguments as String?,
             )),
       },
     );
