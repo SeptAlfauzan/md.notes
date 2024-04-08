@@ -1,4 +1,4 @@
-# My Markdown
+# MD.Notes
 
 note taking app that empower markdown as your canvas
 
