@@ -1,3 +1,4 @@
+import 'package:file_io_simple/core/presentation/home/home_view.dart';
 import 'package:flutter/material.dart';
 
 Future<void> triggerAlert(
@@ -18,6 +19,13 @@ Future<void> triggerAlert(
               ),
             ),
             actions: <Widget>[
+              TextButton(
+                child: const Text('Discard'),
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, HomeView.route, (route) => false);
+                },
+              ),
               TextButton(
                 child: const Text('Close'),
                 onPressed: () {
