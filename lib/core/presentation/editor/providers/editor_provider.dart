@@ -14,32 +14,35 @@ class EditorProvider extends ChangeNotifier {
     _debouncer = Debouncer(milliseconds: 400);
   }
 
-  Future<void> initializeEditor(Notes noteData) async {
+  void initializeEditor(Notes noteData) {
     _notes = noteData;
     final newData = EditorDataEntity(
-        recordDatas: [noteData.data],
-        currentData: noteData.data,
-        activeRecordIdx: 0,
-        onEdit: false,
-        onPreview: false,
-        onSplitMode: false);
+      recordDatas: [noteData.data],
+      currentData: noteData.data,
+      activeRecordIdx: 0,
+      onEdit: false,
+      onPreview: false,
+      onSplitMode: false,
+      undoAble: false,
+      redoAble: false,
+    );
     _editorData = newData;
     notifyListeners();
   }
 
-  Future<void> togglePreview() async {
+  void togglePreview() {
     _editorData = _editorData?.copyWith(
         onSplitMode: false, onPreview: !(_editorData?.onPreview ?? false));
     notifyListeners();
   }
 
-  Future<void> toggleSplitMode() async {
+  void toggleSplitMode() {
     _editorData = _editorData?.copyWith(
         onPreview: false, onSplitMode: !(_editorData?.onSplitMode ?? false));
     notifyListeners();
   }
 
-  Future<void> startEditing() async {
+  void startEditing() {
     print("start editing");
     _editorData = _editorData?.copyWith(onEdit: true);
     notifyListeners();
@@ -64,7 +67,7 @@ class EditorProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateMarkdown(String arg) async {
+  void updateMarkdown(String arg) {
     _editorData = _editorData?.copyWith(
       currentData: arg,
     );
@@ -72,37 +75,60 @@ class EditorProvider extends ChangeNotifier {
     _debouncer.run(() => _updateRecordEditor(arg));
   }
 
-  Future<void> undo() async {
+  void undo() {
     final currentActiveIndex = _editorData?.activeRecordIdx ?? 0;
     final updatedActiveIndex =
         currentActiveIndex == 0 ? 0 : currentActiveIndex - 1;
-    print("undo $currentActiveIndex $updatedActiveIndex");
+
+    final undoAble = currentActiveIndex == 0 ? false : true;
+
     _editorData = _editorData?.copyWith(
-        currentData: _editorData?.recordDatas[updatedActiveIndex],
-        activeRecordIdx: updatedActiveIndex);
+      currentData: _editorData?.recordDatas[updatedActiveIndex],
+      activeRecordIdx: updatedActiveIndex,
+      undoAble: undoAble,
+      redoAble: true,
+    );
     notifyListeners();
   }
 
-  Future<void> redo() async {
+  void redo() {
     final currentActiveIndex =
         _editorData?.activeRecordIdx ?? _editorData!.recordDatas.length - 1;
     final updatedActiveIndex =
         currentActiveIndex == _editorData!.recordDatas.length - 1
             ? _editorData!.recordDatas.length - 1
             : currentActiveIndex + 1;
+
+    final redoAble = currentActiveIndex == _editorData!.recordDatas.length - 1
+        ? false
+        : true;
+
     _editorData = _editorData?.copyWith(
-        currentData: _editorData?.recordDatas[updatedActiveIndex],
-        activeRecordIdx: updatedActiveIndex);
+      currentData: _editorData?.recordDatas[updatedActiveIndex],
+      activeRecordIdx: updatedActiveIndex,
+      redoAble: redoAble,
+      undoAble: true,
+    );
     notifyListeners();
   }
 
-  Future<void> _updateRecordEditor(String arg) async {
+  void _updateRecordEditor(String arg) {
     print("update record of editing");
     final currentRecord = _editorData!.recordDatas;
+    final currentActiveIndex = _editorData!.activeRecordIdx;
+    final lastActiveRecord = _editorData!.recordDatas.length - 1;
+    if (currentActiveIndex < lastActiveRecord) {
+      //remove next index until last index of editing records if user already presss unde and start editing again
+      currentRecord.removeRange(currentActiveIndex + 1, lastActiveRecord + 1);
+    }
+
     currentRecord.add(arg);
+
     _editorData = _editorData?.copyWith(
       recordDatas: currentRecord,
       activeRecordIdx: currentRecord.length - 1,
+      redoAble: false,
+      undoAble: true,
     );
     notifyListeners();
   }

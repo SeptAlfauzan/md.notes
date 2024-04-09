@@ -7,6 +7,8 @@ class EditorTools {
   final Function() checkBox;
   final Function() togglePreview;
   final Function() toggleSplitView;
+  final bool canUndo;
+  final bool canRedo;
 
   EditorTools({
     required this.undo,
@@ -17,5 +19,7 @@ class EditorTools {
     required this.checkBox,
     required this.togglePreview,
     required this.toggleSplitView,
+    required this.canUndo,
+    required this.canRedo,
   });
 }

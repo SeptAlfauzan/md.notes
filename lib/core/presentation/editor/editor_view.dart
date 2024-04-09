@@ -116,6 +116,8 @@ class _EditorViewState extends State<EditorView> {
                         checkBox: () {},
                         togglePreview: () => provider.togglePreview(),
                         toggleSplitView: () => provider.toggleSplitMode(),
+                        canRedo: provider.editorData?.redoAble ?? false,
+                        canUndo: provider.editorData?.undoAble ?? false,
                       ),
                       onPressedSave: () {
                         provider.saveFile();

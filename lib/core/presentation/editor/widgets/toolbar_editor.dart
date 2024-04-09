@@ -87,10 +87,16 @@ class _ToolbarEditorState extends State<ToolbarEditor> {
 
   List<Widget> mainButtons() => [
         IconButton(
-            onPressed: () => widget.editorTools.undo(),
+            disabledColor: Colors.grey.withOpacity(0.4),
+            onPressed: widget.editorTools.canUndo
+                ? () => widget.editorTools.undo()
+                : null,
             icon: const Icon(Icons.undo)),
         IconButton(
-            onPressed: () => widget.editorTools.redo(),
+            disabledColor: Colors.grey.withOpacity(0.4),
+            onPressed: widget.editorTools.canRedo
+                ? () => widget.editorTools.redo()
+                : null,
             icon: const Icon(Icons.redo)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.format_bold)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.format_italic)),

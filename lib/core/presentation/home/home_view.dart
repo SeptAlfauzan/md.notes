@@ -31,7 +31,7 @@ class _HomeViewState extends State<HomeView> {
           builder: (BuildContext context, NotesProvider value, Widget? child) {
             return switch (value.dataState) {
               DataLoading() => const CircularProgressIndicator(),
-              DataSuccess<List<String>>() => RefreshIndicator(
+              DataSuccess() => RefreshIndicator(
                   onRefresh: () async {
                     await Future.delayed(const Duration(milliseconds: 400));
                     await value.getAllSavedNotes();
