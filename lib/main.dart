@@ -1,3 +1,4 @@
+import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/presentation/editor/editor_view.dart';
 import 'package:file_io_simple/core/presentation/editor/providers/editor_provider.dart';
 import 'package:file_io_simple/core/presentation/home/home_view.dart';
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
         EditorView.route: (context) => ChangeNotifierProvider<EditorProvider>(
             create: (context) => EditorProvider(),
             child: EditorView(
-              filePath: ModalRoute.of(context)?.settings.arguments as String?,
+              note: ModalRoute.of(context)?.settings.arguments as Note?,
             )),
       },
     );

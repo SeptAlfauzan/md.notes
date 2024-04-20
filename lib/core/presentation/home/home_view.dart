@@ -50,7 +50,7 @@ class _HomeViewState extends State<HomeView> {
                         return GestureDetector(
                           onTap: () => Navigator.pushNamed(
                                   context, EditorView.route,
-                                  arguments: note?.id ?? "-")
+                                  arguments: note)
                               .then(
                             (_) => Provider.of<NotesProvider>(context,
                                     listen: false)

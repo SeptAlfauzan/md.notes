@@ -98,7 +98,9 @@ class _ToolbarEditorState extends State<ToolbarEditor> {
                 ? () => widget.editorTools.redo()
                 : null,
             icon: const Icon(Icons.redo)),
-        IconButton(onPressed: () {}, icon: const Icon(Icons.format_bold)),
+        IconButton(
+            onPressed: widget.editorTools.toggleBold,
+            icon: const Icon(Icons.format_bold)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.format_italic)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.code)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.image)),

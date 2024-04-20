@@ -15,10 +15,10 @@ import 'package:uuid/uuid.dart';
 
 class EditorView extends StatefulWidget {
   static const String route = "editor_route";
-  final String? filePath;
+  final Note? note;
   static const _padding = EdgeInsets.only(left: 24, right: 24, top: 24);
 
-  const EditorView({super.key, this.filePath});
+  const EditorView({super.key, this.note});
 
   @override
   State<EditorView> createState() => _EditorViewState();
@@ -32,11 +32,10 @@ class _EditorViewState extends State<EditorView> {
 
   Future<Note> readMarkdownFile() async {
     try {
-      final fileId = widget.filePath?.replaceAll(".md", "") ?? "";
+      final fileId = widget.note?.id.replaceAll(".md", "") ?? "";
       final String contents =
           await Provider.of<EditorProvider>(context, listen: false)
               .readNoteContentStr(fileId);
-
       String filename = path.basename(fileId);
       return Note(
           id: filename.replaceAll(".md", ""),
@@ -49,10 +48,27 @@ class _EditorViewState extends State<EditorView> {
     }
   }
 
+  toggleBold() {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+    RegExp regex = RegExp(r'^\*\*(.*?)\*\*$');
+    final replaced = textEditingController.text.replaceRange(
+        baseOffset,
+        extentOffset,
+        regex.hasMatch(selectedText)
+            ? selectedText.replaceAll("**", "")
+            : "**$selectedText**");
+    textEditingController.text = replaced;
+    Provider.of<EditorProvider>(context, listen: false)
+        .updateMarkdown(replaced);
+  }
+
   @override
   void initState() {
     super.initState();
-    final bool isCreateNewFile = widget.filePath == null ? true : false;
+    final bool isCreateNewFile = widget.note == null ? true : false;
 
     Future.microtask(() async {
       textEditingController.value = TextEditingValue(
@@ -119,6 +135,7 @@ class _EditorViewState extends State<EditorView> {
                         checkBox: () {},
                         togglePreview: () => provider.togglePreview(),
                         toggleSplitView: () => provider.toggleSplitMode(),
+                        toggleBold: toggleBold,
                         canRedo: provider.editorData?.redoAble ?? false,
                         canUndo: provider.editorData?.undoAble ?? false,
                       ),

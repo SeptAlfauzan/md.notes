@@ -35,7 +35,7 @@ class VerticalDividerSplitMode extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Container(
                   decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Colors.blueGrey[200],
                       borderRadius:
                           const BorderRadius.all(Radius.circular(20))),
                   height: 24.0,
