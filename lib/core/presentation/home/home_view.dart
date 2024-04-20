@@ -45,7 +45,7 @@ class _HomeViewState extends State<HomeView> {
                         GestureDetector(
                       onTap: () => Navigator.pushNamed(
                               context, EditorView.route,
-                              arguments: value.dataState.data?[index] ?? "-")
+                              arguments: value.dataState.data?[index].id ?? "-")
                           .then(
                         (_) =>
                             Provider.of<NotesProvider>(context, listen: false)
@@ -64,13 +64,13 @@ class _HomeViewState extends State<HomeView> {
                                 ],
                               )),
                         ),
-                        key: Key(value.dataState.data?[index] ?? "-"),
+                        key: Key(value.dataState.data?[index].id ?? "-"),
                         direction: DismissDirection.startToEnd,
                         onDismissed: (direction) => value
-                            .deleteNote(value.dataState.data?[index] ?? "-"),
+                            .deleteNote(value.dataState.data?[index].id ?? "-"),
                         child: Material(
                           child: ListTile(
-                            title: Text(value.dataState.data?[index] ?? "-"),
+                            title: Text(value.dataState.data?[index].id ?? "-"),
                             tileColor: Theme.of(context)
                                 .colorScheme
                                 .secondaryContainer

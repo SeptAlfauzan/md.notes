@@ -9,6 +9,11 @@ class FileHelper {
     return file.writeAsString(content);
   }
 
+  static Future<String> getContentStrFromFile(String filename) async {
+    final path = await getFilePath(filename);
+    return await readFile(path);
+  }
+
   static Future<String> readFile(String path) async {
     try {
       final file = File(path);

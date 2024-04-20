@@ -1,12 +1,16 @@
 import 'package:file_io_simple/core/domain/common/data_state.dart';
+import 'package:file_io_simple/core/domain/entities/notes.dart';
+import 'package:file_io_simple/core/utils/helper/database_helper.dart';
 import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/foundation.dart';
 
 class NotesProvider extends ChangeNotifier {
-  DataState<List<String>> _dataState = const DataEmpty();
-  DataState<List<String>> get dataState => _dataState;
+  late DatabaseHelper _databaseHelper;
+  DataState<List<Note>> _dataState = const DataEmpty();
+  DataState<List<Note>> get dataState => _dataState;
 
   NotesProvider() {
+    _databaseHelper = DatabaseHelper();
     getAllSavedNotes();
   }
 
@@ -14,15 +18,17 @@ class NotesProvider extends ChangeNotifier {
     _dataState = const DataLoading();
     notifyListeners();
     try {
-      final result = await FileHelper.getFiles();
-      final paths = result.map((file) => file.path).toList();
+      final resultFiles = await FileHelper.getFiles();
+      final filePaths = resultFiles.map((file) => file.path).toList();
 
-      print("get notes $paths");
+      print(filePaths);
 
-      if (paths.isEmpty) {
+      final result = await _databaseHelper.getNotes();
+
+      if (result.isEmpty) {
         _dataState = const DataEmpty();
       } else {
-        _dataState = DataSuccess(data: paths);
+        _dataState = DataSuccess(data: result);
       }
     } catch (e) {
       _dataState = DataFailed(errMessage: e.toString());
@@ -31,8 +37,10 @@ class NotesProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteNote(String path) async {
+  Future<void> deleteNote(String filename) async {
     try {
+      final path = await FileHelper.getFilePath(filename);
+      await _databaseHelper.deleteNote(filename);
       await FileHelper.deleteFile(path);
     } catch (e) {
       print(e.toString());

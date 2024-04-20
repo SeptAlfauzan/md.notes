@@ -1,20 +1,26 @@
 import 'package:file_io_simple/core/domain/entities/editor.dart';
 import 'package:file_io_simple/core/domain/entities/notes.dart';
+import 'package:file_io_simple/core/utils/helper/database_helper.dart';
 import 'package:file_io_simple/core/utils/helper/debouncer_helper.dart';
 import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/foundation.dart';
 
 class EditorProvider extends ChangeNotifier {
+  late DatabaseHelper _databaseHelper;
   EditorDataEntity? _editorData;
   EditorDataEntity? get editorData => _editorData;
   late Debouncer _debouncer;
-  late Notes _notes;
+  late Note _notes;
 
   EditorProvider() {
+    _databaseHelper = DatabaseHelper();
     _debouncer = Debouncer(milliseconds: 400);
   }
 
-  void initializeEditor(Notes noteData) {
+  Future<String> readNoteContentStr(String filename) async =>
+      await FileHelper.getContentStrFromFile(filename);
+
+  void initializeEditor(Note noteData) {
     _notes = noteData;
     final newData = EditorDataEntity(
       recordDatas: [noteData.data],
@@ -61,6 +67,9 @@ class EditorProvider extends ChangeNotifier {
         await FileHelper.createNewFile(_notes.id, content);
       }
       _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
+      print(_notes.toMap());
+      await _databaseHelper.insertNote(_notes);
+
       notifyListeners();
     } catch (e) {
       print(e.toString());
@@ -71,6 +80,8 @@ class EditorProvider extends ChangeNotifier {
     _editorData = _editorData?.copyWith(
       currentData: arg,
     );
+    _notes = _notes.copyWith(data: arg);
+    print(_notes.data);
     notifyListeners();
     _debouncer.run(() => _updateRecordEditor(arg));
   }
@@ -88,6 +99,8 @@ class EditorProvider extends ChangeNotifier {
       undoAble: undoAble,
       redoAble: true,
     );
+
+    _notes = _notes.copyWith(data: _editorData?.currentData);
     notifyListeners();
   }
 
@@ -109,6 +122,8 @@ class EditorProvider extends ChangeNotifier {
       redoAble: redoAble,
       undoAble: true,
     );
+
+    _notes = _notes.copyWith(data: _editorData?.currentData);
     notifyListeners();
   }
 

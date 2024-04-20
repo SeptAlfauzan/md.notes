@@ -30,11 +30,15 @@ class _EditorViewState extends State<EditorView> {
 
   double posY = 0.0;
 
-  Future<Notes> readMarkdownFile() async {
+  Future<Note> readMarkdownFile() async {
     try {
-      final String contents = await FileHelper.readFile(widget.filePath ?? "");
-      String filename = path.basename(widget.filePath ?? "");
-      return Notes(
+      final fileId = widget.filePath?.replaceAll(".md", "") ?? "";
+      final String contents =
+          await Provider.of<EditorProvider>(context, listen: false)
+              .readNoteContentStr(fileId);
+
+      String filename = path.basename(fileId);
+      return Note(
           id: filename.replaceAll(".md", ""),
           data: contents,
           created: DateTime.now()); //TODO: replace this create datetime
@@ -54,8 +58,7 @@ class _EditorViewState extends State<EditorView> {
       textEditingController.value = TextEditingValue(
         text: isCreateNewFile ? "" : (await readMarkdownFile()).data,
       );
-      Provider.of<EditorProvider>(context, listen: false)
-          .initializeEditor(Notes(
+      Provider.of<EditorProvider>(context, listen: false).initializeEditor(Note(
         id: isCreateNewFile ? const Uuid().v4() : (await readMarkdownFile()).id,
         data: isCreateNewFile ? "" : (await readMarkdownFile()).data,
         created: isCreateNewFile
