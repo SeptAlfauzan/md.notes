@@ -24,6 +24,7 @@ class DatabaseHelper {
         await db.execute(
           '''CREATE TABLE $_tableName (
                 id TEXT PRIMARY KEY,
+                title TEXT,
                 data TEXT,
                 description TEXT,
                 created TEXT,

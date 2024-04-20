@@ -2,6 +2,7 @@ import 'package:file_io_simple/core/domain/common/data_state.dart';
 import 'package:file_io_simple/core/presentation/editor/editor_view.dart';
 import 'package:file_io_simple/core/presentation/home/providers/notes_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
@@ -36,54 +37,93 @@ class _HomeViewState extends State<HomeView> {
                     await Future.delayed(const Duration(milliseconds: 400));
                     await value.getAllSavedNotes();
                   },
-                  child: ListView.separated(
-                    separatorBuilder: (context, index) => const SizedBox(
-                      height: 8.0,
-                    ),
-                    itemCount: value.dataState.data?.length ?? 0,
-                    itemBuilder: (BuildContext context, int index) =>
-                        GestureDetector(
-                      onTap: () => Navigator.pushNamed(
-                              context, EditorView.route,
-                              arguments: value.dataState.data?[index].id ?? "-")
-                          .then(
-                        (_) =>
-                            Provider.of<NotesProvider>(context, listen: false)
+                  child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.6,
+                      ),
+                      itemCount: value.dataState.data?.length ?? 0,
+                      itemBuilder: (BuildContext context, int index) {
+                        final note = value.dataState.data?[index];
+                        return GestureDetector(
+                          onTap: () => Navigator.pushNamed(
+                                  context, EditorView.route,
+                                  arguments: note?.id ?? "-")
+                              .then(
+                            (_) => Provider.of<NotesProvider>(context,
+                                    listen: false)
                                 .getAllSavedNotes(),
-                      ),
-                      child: Dismissible(
-                        background: Container(
-                          color: Colors.red,
-                          padding: const EdgeInsets.all(16),
-                          child: const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete),
-                                  Text("Delete this notes")
-                                ],
-                              )),
-                        ),
-                        key: Key(value.dataState.data?[index].id ?? "-"),
-                        direction: DismissDirection.startToEnd,
-                        onDismissed: (direction) => value
-                            .deleteNote(value.dataState.data?[index].id ?? "-"),
-                        child: Material(
-                          child: ListTile(
-                            title: Text(value.dataState.data?[index].id ?? "-"),
-                            subtitle: Text(
-                                'created: ${value.dataState.data?[index].created.toString() ?? "-"}'),
-                            trailing: Text(
-                                'last edit: ${value.dataState.data?[index].lastEdited.toString() ?? "-"}'),
-                            tileColor: Theme.of(context)
-                                .colorScheme
-                                .secondaryContainer
-                                .withOpacity(0.4),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
+                          child: Dismissible(
+                            background: Card(
+                              color: Colors.red,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                child: const Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete,
+                                          color: Colors.white,
+                                        ),
+                                        Text(
+                                          "Delete this notes",
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      ],
+                                    )),
+                              ),
+                            ),
+                            key: Key(note?.id ?? "-"),
+                            direction: DismissDirection.startToEnd,
+                            onDismissed: (direction) =>
+                                value.deleteNote(note?.id ?? "-"),
+                            child: Card(
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 12.0),
+                                        child: Text(
+                                            maxLines: 2,
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
+                                            note?.title ??
+                                                "Note ${DateFormat.yMMMd().format(note!.created!)}"),
+                                      ),
+                                      Text(
+                                          maxLines: 7,
+                                          overflow: TextOverflow.ellipsis,
+                                          note?.data ?? "-"),
+                                      const Spacer(),
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Text(
+                                            textAlign: TextAlign.right,
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withOpacity(0.4)),
+                                            'last edit: ${note?.lastEdited != null ? DateFormat.yMMMd().format(note!.lastEdited!) : "-"}'),
+                                      ),
+                                    ]),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
                 ),
               DataFailed() => Text(value.dataState.errMessage ?? "-"),
               DataEmpty() => const Text("no data"),

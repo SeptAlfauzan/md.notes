@@ -1,0 +1,22 @@
+dev_dependencies:
+  flutter_launcher_icons: "^0.13.1"
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_ic_no_bg.png"
+  adaptive_icon_foreground: "assets/images/app_ic_no_bg.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  adaptive_icon_background: "#064CD4"
+  web:
+    generate: true
+    image_path: "assets/images/app_ic_no_bg.png"
+    background_color: "#064CD4"
+    theme_color: "#064CD4"
+  windows:
+    generate: true
+    image_path: "assets/images/app_ic_no_bg.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/images/app_ic_no_bg.png"
