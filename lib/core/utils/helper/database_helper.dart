@@ -48,7 +48,7 @@ class DatabaseHelper {
     return results.map((res) => Note.fromMap(res)).toList();
   }
 
-  Future<Note> getNoteById(String id) async {
+  Future<Note?> getNoteById(String id) async {
     final Database db = await database;
     List<Map<String, dynamic>> results = await db.query(
       _tableName,
@@ -56,7 +56,7 @@ class DatabaseHelper {
       whereArgs: [id],
     );
 
-    return results.map((res) => Note.fromMap(res)).first;
+    return results.map((res) => Note.fromMap(res)).firstOrNull;
   }
 
   Future<void> updateNote(Note note) async {

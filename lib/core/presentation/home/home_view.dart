@@ -71,6 +71,10 @@ class _HomeViewState extends State<HomeView> {
                         child: Material(
                           child: ListTile(
                             title: Text(value.dataState.data?[index].id ?? "-"),
+                            subtitle: Text(
+                                'created: ${value.dataState.data?[index].created.toString() ?? "-"}'),
+                            trailing: Text(
+                                'last edit: ${value.dataState.data?[index].lastEdited.toString() ?? "-"}'),
                             tileColor: Theme.of(context)
                                 .colorScheme
                                 .secondaryContainer

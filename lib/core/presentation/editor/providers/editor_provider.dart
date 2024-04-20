@@ -59,16 +59,23 @@ class EditorProvider extends ChangeNotifier {
     try {
       final filePath = await FileHelper.getFilePath(_notes.id);
       final isFileExist = await FileHelper.checkFileExist(filePath);
+      final isFileExistInDB =
+          await _databaseHelper.getNoteById(_notes.id) == null ? false : true;
+
       final content = _editorData?.currentData ?? "-";
-      print("notes id adalah ${_notes.id}");
-      if (isFileExist) {
+
+      if (isFileExist && isFileExistInDB) {
+        _notes = _notes.copyWith(lastEdited: DateTime.now());
+
         await FileHelper.writeFile(filePath, content);
+        await _databaseHelper.updateNote(_notes);
       } else {
         await FileHelper.createNewFile(_notes.id, content);
+        await _databaseHelper.insertNote(_notes);
       }
+
       _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
       print(_notes.toMap());
-      await _databaseHelper.insertNote(_notes);
 
       notifyListeners();
     } catch (e) {
