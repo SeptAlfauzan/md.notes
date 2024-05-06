@@ -7,7 +7,6 @@ import 'package:file_io_simple/core/presentation/editor/widgets/preview_field.da
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/vertical_devider_split_mode.dart';
 import 'package:file_io_simple/core/presentation/widgets/alert_popup.dart';
-import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';

@@ -1,8 +1,10 @@
 import 'package:file_io_simple/core/domain/common/data_state.dart';
+import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/presentation/editor/editor_view.dart';
 import 'package:file_io_simple/core/presentation/home/providers/notes_provider.dart';
+import 'package:file_io_simple/core/presentation/widgets/delete_background.dart';
+import 'package:file_io_simple/core/presentation/widgets/note_card.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
@@ -48,79 +50,14 @@ class _HomeViewState extends State<HomeView> {
                       itemBuilder: (BuildContext context, int index) {
                         final note = value.dataState.data?[index];
                         return GestureDetector(
-                          onTap: () => Navigator.pushNamed(
-                                  context, EditorView.route,
-                                  arguments: note)
-                              .then(
-                            (_) => Provider.of<NotesProvider>(context,
-                                    listen: false)
-                                .getAllSavedNotes(),
-                          ),
+                          onTap: () => _navigateEditor(note),
                           child: Dismissible(
-                            background: Card(
-                              color: Colors.red,
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                child: const Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.delete,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          "Delete this notes",
-                                          style: TextStyle(color: Colors.white),
-                                        )
-                                      ],
-                                    )),
-                              ),
-                            ),
+                            background: const DeleteBackground(),
                             key: Key(note?.id ?? "-"),
-                            direction: DismissDirection.startToEnd,
+                            direction: DismissDirection.endToStart,
                             onDismissed: (direction) =>
                                 value.deleteNote(note?.id ?? "-"),
-                            child: Card(
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 12.0),
-                                        child: Text(
-                                            maxLines: 2,
-                                            style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.normal),
-                                            overflow: TextOverflow.ellipsis,
-                                            note?.title ??
-                                                "Note ${DateFormat.yMMMd().format(note!.created!)}"),
-                                      ),
-                                      Text(
-                                          maxLines: 7,
-                                          overflow: TextOverflow.ellipsis,
-                                          note?.data ?? "-"),
-                                      const Spacer(),
-                                      Align(
-                                        alignment: Alignment.bottomRight,
-                                        child: Text(
-                                            textAlign: TextAlign.right,
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withOpacity(0.4)),
-                                            'last edit: ${note?.lastEdited != null ? DateFormat.yMMMd().format(note!.lastEdited!) : "-"}'),
-                                      ),
-                                    ]),
-                              ),
-                            ),
+                            child: NoteCard(note: note),
                           ),
                         );
                       }),
@@ -132,12 +69,15 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateEditor(null),
         child: const Icon(Icons.note_add),
-        onPressed: () =>
-            Navigator.pushNamed(context, EditorView.route, arguments: null)
-                .then((_) => Provider.of<NotesProvider>(context, listen: false)
-                    .getAllSavedNotes()),
       ),
     );
   }
+
+  void _navigateEditor(Note? note) =>
+      Navigator.pushNamed(context, EditorView.route, arguments: note).then(
+        (_) => Provider.of<NotesProvider>(context, listen: false)
+            .getAllSavedNotes(),
+      );
 }
