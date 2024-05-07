@@ -8,6 +8,8 @@ class EditorTools {
   final Function() togglePreview;
   final Function() toggleSplitView;
   final Function() toggleBold;
+  final Function() toggleItalic;
+  final Function() toggleCode;
   final bool canUndo;
   final bool canRedo;
 
@@ -21,6 +23,8 @@ class EditorTools {
     required this.togglePreview,
     required this.toggleSplitView,
     required this.toggleBold,
+    required this.toggleItalic,
+    required this.toggleCode,
     required this.canUndo,
     required this.canRedo,
   });

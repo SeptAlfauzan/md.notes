@@ -61,6 +61,58 @@ class _EditorViewState extends State<EditorView> {
             ? selectedText.replaceAll("**", "")
             : "**$selectedText**");
     textEditingController.text = replaced;
+
+    const offset = 2;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: baseOffset + selectedText.length + offset);
+
+    Provider.of<EditorProvider>(context, listen: false)
+        .updateMarkdown(replaced);
+  }
+
+  toggleCode() {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+    RegExp regex = RegExp(r'^\`\`\`(.*?)\`\`\`$');
+    final replaced = textEditingController.text.replaceRange(
+        baseOffset,
+        extentOffset,
+        regex.hasMatch(selectedText)
+            ? selectedText.replaceAll("```", "")
+            : """
+```
+$selectedText
+```
+            """);
+    textEditingController.text = replaced;
+    const offset = 4;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: baseOffset + selectedText.length + offset);
+    Provider.of<EditorProvider>(context, listen: false)
+        .updateMarkdown(replaced);
+  }
+
+  toggleItalic() {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+    RegExp regex = RegExp(r'^\_(.*?)\_$');
+    final replaced = textEditingController.text.replaceRange(
+        baseOffset,
+        extentOffset,
+        regex.hasMatch(selectedText)
+            ? selectedText.replaceAll("_", "")
+            : "_${selectedText}_");
+    textEditingController.text = replaced;
+
+    const offset = 1;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: baseOffset + selectedText.length + offset);
+
     Provider.of<EditorProvider>(context, listen: false)
         .updateMarkdown(replaced);
   }
@@ -142,6 +194,8 @@ class _EditorViewState extends State<EditorView> {
                         togglePreview: () => provider.togglePreview(),
                         toggleSplitView: () => provider.toggleSplitMode(),
                         toggleBold: toggleBold,
+                        toggleItalic: toggleItalic,
+                        toggleCode: toggleCode,
                         canRedo: provider.editorData?.redoAble ?? false,
                         canUndo: provider.editorData?.undoAble ?? false,
                       ),
