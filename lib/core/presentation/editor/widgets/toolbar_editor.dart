@@ -103,7 +103,9 @@ class _ToolbarEditorState extends State<ToolbarEditor> {
             icon: const Icon(Icons.format_bold)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.format_italic)),
         IconButton(onPressed: () {}, icon: const Icon(Icons.code)),
-        IconButton(onPressed: () {}, icon: const Icon(Icons.image)),
+        IconButton(
+            onPressed: widget.editorTools.importImg,
+            icon: const Icon(Icons.image)),
       ];
 
   List<Widget> _moreButtons() => [

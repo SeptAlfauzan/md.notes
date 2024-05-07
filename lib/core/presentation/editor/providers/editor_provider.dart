@@ -4,9 +4,11 @@ import 'package:file_io_simple/core/utils/helper/database_helper.dart';
 import 'package:file_io_simple/core/utils/helper/debouncer_helper.dart';
 import 'package:file_io_simple/core/utils/helper/file_helper.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class EditorProvider extends ChangeNotifier {
   late DatabaseHelper _databaseHelper;
+  TextEditingController? _textEditingController;
   EditorDataEntity? _editorData;
   EditorDataEntity? get editorData => _editorData;
   late Debouncer _debouncer;
@@ -48,9 +50,10 @@ class EditorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startEditing() {
+  void startEditing(TextEditingController? textEditingController) {
     print("start editing");
     _editorData = _editorData?.copyWith(onEdit: true);
+    _textEditingController = textEditingController;
     notifyListeners();
   }
 
@@ -81,6 +84,15 @@ class EditorProvider extends ChangeNotifier {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  void addImage(String? path) {
+    if (path == null) return;
+    String imagePatternStr = "![image1]($path)";
+    String newContent = "${_editorData?.currentData}$imagePatternStr";
+    _textEditingController?.text = newContent;
+
+    updateMarkdown(newContent);
   }
 
   void updateMarkdown(String arg) {

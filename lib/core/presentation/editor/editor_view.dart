@@ -7,6 +7,7 @@ import 'package:file_io_simple/core/presentation/editor/widgets/preview_field.da
 import 'package:file_io_simple/core/presentation/editor/widgets/toolbar_editor.dart';
 import 'package:file_io_simple/core/presentation/editor/widgets/vertical_devider_split_mode.dart';
 import 'package:file_io_simple/core/presentation/widgets/alert_popup.dart';
+import 'package:file_io_simple/core/utils/helper/image_picker_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
@@ -81,7 +82,8 @@ class _EditorViewState extends State<EditorView> {
             : (await readMarkdownFile()).created,
       ));
       if (isCreateNewFile) {
-        Provider.of<EditorProvider>(context, listen: false).startEditing();
+        Provider.of<EditorProvider>(context, listen: false)
+            .startEditing(textEditingController);
         focusNode.requestFocus();
       }
     });
@@ -128,7 +130,12 @@ class _EditorViewState extends State<EditorView> {
                           textEditingController.value = TextEditingValue(
                               text: provider.editorData?.currentData ?? "-");
                         },
-                        importImg: () {},
+                        importImg: () async {
+                          final imagePickerHelper = ImagePickerHelper();
+                          final path = await imagePickerHelper.pickImagePath();
+                          print(path);
+                          provider.addImage(path);
+                        },
                         listDots: () {},
                         listNumber: () {},
                         checkBox: () {},
@@ -141,7 +148,9 @@ class _EditorViewState extends State<EditorView> {
                       onPressedSave: () {
                         provider.saveFile();
                       })
-                  : EditTopBar(onPressed: () => provider.startEditing()),
+                  : EditTopBar(
+                      onPressed: () =>
+                          provider.startEditing(textEditingController)),
               Expanded(
                 flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
                 child: Container(
