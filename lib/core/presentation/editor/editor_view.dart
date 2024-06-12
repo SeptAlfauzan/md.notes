@@ -53,18 +53,33 @@ class _EditorViewState extends State<EditorView> {
     final extentOffset = textEditingController.selection.extentOffset;
     final selectedText =
         textEditingController.text.substring(baseOffset, extentOffset);
+
+    final selectedTextWithPrefixs =
+        textEditingController.text.substring(baseOffset - 2, extentOffset + 2);
     RegExp regex = RegExp(r'^\*\*(.*?)\*\*$');
+
+    print(regex.hasMatch(selectedTextWithPrefixs));
+    print(selectedTextWithPrefixs);
+    print(selectedTextWithPrefixs);
+
     final replaced = textEditingController.text.replaceRange(
-        baseOffset,
-        extentOffset,
-        regex.hasMatch(selectedText)
-            ? selectedText.replaceAll("**", "")
-            : "**$selectedText**");
+        regex.hasMatch(selectedTextWithPrefixs) ? baseOffset - 2 : baseOffset,
+        regex.hasMatch(selectedTextWithPrefixs)
+            ? extentOffset + 2
+            : extentOffset,
+        regex.hasMatch(selectedTextWithPrefixs)
+            ? selectedTextWithPrefixs.replaceAll("**", "")
+            : regex.hasMatch(selectedText)
+                ? selectedText.replaceAll("**", "")
+                : "**$selectedText**");
+
     textEditingController.text = replaced;
 
     const offset = 2;
     textEditingController.selection = TextSelection.collapsed(
-        offset: baseOffset + selectedText.length + offset);
+        offset: regex.hasMatch(selectedTextWithPrefixs)
+            ? selectedTextWithPrefixs.length - offset
+            : baseOffset + selectedText.length + offset);
 
     Provider.of<EditorProvider>(context, listen: false)
         .updateMarkdown(replaced);
