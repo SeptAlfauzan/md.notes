@@ -81,13 +81,13 @@ Widget _buildNoteTitle(BuildContext context, Note? note) {
 
 Widget _buildLastEditText(BuildContext context, Note? note) {
   return note?.lastEdited != null
-      ? Flexible(
-          child: Text(
-              style: TextStyle(
-                  fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
-              'last edit: ${note?.lastEdited != null ? DateFormat.yMMMd().format(note!.lastEdited!) : "-"}'),
-        )
-      : const Spacer();
+      ? Text(
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+              fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
+          'last edit: ${note?.lastEdited != null ? DateFormat.yMMMd().format(note!.lastEdited!) : "-"}')
+      : const SizedBox.shrink();
 }
 
 class _buildDownloadButton extends StatelessWidget {

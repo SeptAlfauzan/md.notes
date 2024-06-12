@@ -101,17 +101,20 @@ $selectedText
     final selectedText =
         textEditingController.text.substring(baseOffset, extentOffset);
     RegExp regex = RegExp(r'^\_(.*?)\_$');
+    final isAlreadyItalic = regex.hasMatch(selectedText);
     final replaced = textEditingController.text.replaceRange(
         baseOffset,
         extentOffset,
-        regex.hasMatch(selectedText)
+        isAlreadyItalic
             ? selectedText.replaceAll("_", "")
             : "_${selectedText}_");
     textEditingController.text = replaced;
 
     const offset = 1;
     textEditingController.selection = TextSelection.collapsed(
-        offset: baseOffset + selectedText.length + offset);
+        offset: isAlreadyItalic
+            ? selectedText.length
+            : baseOffset + selectedText.length + offset);
 
     Provider.of<EditorProvider>(context, listen: false)
         .updateMarkdown(replaced);

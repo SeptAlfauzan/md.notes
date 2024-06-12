@@ -40,7 +40,7 @@ class _HomeViewState extends State<HomeView> {
                     await value.getAllSavedNotes();
                   },
                   child: GridView.builder(
-                      shrinkWrap: true,
+                      // shrinkWrap: true,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
