@@ -49,15 +49,41 @@ class _HomeViewState extends State<HomeView> {
                       itemCount: value.dataState.data?.length ?? 0,
                       itemBuilder: (BuildContext context, int index) {
                         final note = value.dataState.data?[index];
-                        return GestureDetector(
-                          onTap: () => _navigateEditor(note),
-                          child: Dismissible(
-                            background: const DeleteBackground(),
-                            key: Key(note?.id ?? "-"),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) =>
-                                value.deleteNote(note?.id ?? "-"),
-                            child: NoteCard(note: note),
+                        return Dismissible(
+                          background: const DeleteBackground(),
+                          key: Key(note?.id ?? "-"),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) async {
+                            try {
+                              await value.deleteNote(note?.id ?? "-");
+                            } catch (error) {
+                              await showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                        title: const Text('AlertDialog Title'),
+                                        content: SingleChildScrollView(
+                                          child: ListBody(
+                                            children: <Widget>[
+                                              const Text('Error deleting note'),
+                                              Text(
+                                                  'Error: ${error.toString()}'),
+                                            ],
+                                          ),
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            child: const Text('Close'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      ));
+                            }
+                          },
+                          child: NoteCard(
+                            note: note,
+                            onTap: () => _navigateEditor(note),
                           ),
                         );
                       }),

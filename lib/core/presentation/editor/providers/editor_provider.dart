@@ -3,7 +3,6 @@ import 'package:file_io_simple/core/domain/entities/notes.dart';
 import 'package:file_io_simple/core/utils/helper/database_helper.dart';
 import 'package:file_io_simple/core/utils/helper/debouncer_helper.dart';
 import 'package:file_io_simple/core/utils/helper/file_helper.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class EditorProvider extends ChangeNotifier {
@@ -78,7 +77,6 @@ class EditorProvider extends ChangeNotifier {
       }
 
       _editorData = _editorData?.copyWith(onEdit: false, onSplitMode: false);
-      print(_notes.toMap());
 
       notifyListeners();
     } catch (e) {
@@ -100,7 +98,6 @@ class EditorProvider extends ChangeNotifier {
       currentData: arg,
     );
     _notes = _notes.copyWith(data: arg);
-    print(_notes.data);
     notifyListeners();
     _debouncer.run(() => _updateRecordEditor(arg));
   }

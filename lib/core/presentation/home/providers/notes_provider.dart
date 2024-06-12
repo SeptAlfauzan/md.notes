@@ -18,10 +18,8 @@ class NotesProvider extends ChangeNotifier {
     _dataState = const DataLoading();
     notifyListeners();
     try {
-      final resultFiles = await FileHelper.getFiles();
-      final filePaths = resultFiles.map((file) => file.path).toList();
-
-      print(filePaths);
+      // final resultFiles = await FileHelper.getFiles();
+      // final filePaths = resultFiles.map((file) => file.path).toList();
 
       final result = await _databaseHelper.getNotes();
 
@@ -43,7 +41,7 @@ class NotesProvider extends ChangeNotifier {
       await _databaseHelper.deleteNote(filename);
       await FileHelper.deleteFile(path);
     } catch (e) {
-      print(e.toString());
+      rethrow;
     } finally {
       getAllSavedNotes();
     }
