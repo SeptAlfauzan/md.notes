@@ -30,130 +30,39 @@ class _EditorViewState extends State<EditorView> {
 
   double posY = 0.0;
 
-  Future<Note> readMarkdownFile() async {
-    try {
-      final fileId = widget.note?.id.replaceAll(".md", "") ?? "";
-      final String contents =
-          await Provider.of<EditorProvider>(context, listen: false)
-              .readNoteContentStr(fileId);
-      String filename = path.basename(fileId);
-      return Note(
-          id: filename.replaceAll(".md", ""),
-          data: contents,
-          created: DateTime.now()); //TODO: replace this create datetime
-    } catch (e) {
-      // If encountering an error, return 0.
-      print(e);
-      rethrow;
-    }
-  }
-
-  toggleBold() {
-    final baseOffset = textEditingController.selection.baseOffset;
-    final extentOffset = textEditingController.selection.extentOffset;
-    final selectedText =
-        textEditingController.text.substring(baseOffset, extentOffset);
-
-    final selectedTextWithPrefixs =
-        textEditingController.text.substring(baseOffset - 2, extentOffset + 2);
-    RegExp regex = RegExp(r'^\*\*(.*?)\*\*$');
-
-    print(regex.hasMatch(selectedTextWithPrefixs));
-    print(selectedTextWithPrefixs);
-    print(selectedTextWithPrefixs);
-
-    final replaced = textEditingController.text.replaceRange(
-        regex.hasMatch(selectedTextWithPrefixs) ? baseOffset - 2 : baseOffset,
-        regex.hasMatch(selectedTextWithPrefixs)
-            ? extentOffset + 2
-            : extentOffset,
-        regex.hasMatch(selectedTextWithPrefixs)
-            ? selectedTextWithPrefixs.replaceAll("**", "")
-            : regex.hasMatch(selectedText)
-                ? selectedText.replaceAll("**", "")
-                : "**$selectedText**");
-
-    textEditingController.text = replaced;
-
-    const offset = 2;
-    textEditingController.selection = TextSelection.collapsed(
-        offset: regex.hasMatch(selectedTextWithPrefixs)
-            ? selectedTextWithPrefixs.length - offset
-            : baseOffset + selectedText.length + offset);
-
-    Provider.of<EditorProvider>(context, listen: false)
-        .updateMarkdown(replaced);
-  }
-
-  toggleCode() {
-    final baseOffset = textEditingController.selection.baseOffset;
-    final extentOffset = textEditingController.selection.extentOffset;
-
-    final selectedText =
-        textEditingController.text.substring(baseOffset, extentOffset);
-    RegExp regex = RegExp(r'^\`\`\`(.*?)\`\`\`$');
-    final replaced = textEditingController.text.replaceRange(
-        baseOffset,
-        extentOffset,
-        regex.hasMatch(selectedText)
-            ? selectedText.replaceAll("```", "")
-            : """
-```
-$selectedText
-```
-            """);
-    textEditingController.text = replaced;
-    const offset = 4;
-    textEditingController.selection = TextSelection.collapsed(
-        offset: baseOffset + selectedText.length + offset);
-    Provider.of<EditorProvider>(context, listen: false)
-        .updateMarkdown(replaced);
-  }
-
-  toggleItalic() {
-    final baseOffset = textEditingController.selection.baseOffset;
-    final extentOffset = textEditingController.selection.extentOffset;
-    final selectedText =
-        textEditingController.text.substring(baseOffset, extentOffset);
-    RegExp regex = RegExp(r'^\_(.*?)\_$');
-    final isAlreadyItalic = regex.hasMatch(selectedText);
-    final replaced = textEditingController.text.replaceRange(
-        baseOffset,
-        extentOffset,
-        isAlreadyItalic
-            ? selectedText.replaceAll("_", "")
-            : "_${selectedText}_");
-    textEditingController.text = replaced;
-
-    const offset = 1;
-    textEditingController.selection = TextSelection.collapsed(
-        offset: isAlreadyItalic
-            ? selectedText.length
-            : baseOffset + selectedText.length + offset);
-
-    Provider.of<EditorProvider>(context, listen: false)
-        .updateMarkdown(replaced);
-  }
-
   @override
   void initState() {
     super.initState();
     final bool isCreateNewFile = widget.note == null ? true : false;
 
     Future.microtask(() async {
+      final provider = Provider.of<EditorProvider>(context, listen: false);
+      final fileId = widget.note?.id.replaceAll(".md", "") ?? "";
+      String filename = path.basename(fileId);
+
       textEditingController.value = TextEditingValue(
-        text: isCreateNewFile ? "" : (await readMarkdownFile()).data,
+        text: isCreateNewFile
+            ? ""
+            : (await Provider.of<EditorProvider>(context, listen: false)
+                    .readMarkdownFile(fileId, filename))
+                .data,
       );
-      Provider.of<EditorProvider>(context, listen: false).initializeEditor(Note(
-        id: isCreateNewFile ? const Uuid().v4() : (await readMarkdownFile()).id,
-        data: isCreateNewFile ? "" : (await readMarkdownFile()).data,
+
+      final initialNote = Note(
+        id: isCreateNewFile
+            ? const Uuid().v4()
+            : (await provider.readMarkdownFile(fileId, filename)).id,
+        data: isCreateNewFile
+            ? ""
+            : (await provider.readMarkdownFile(fileId, filename)).data,
         created: isCreateNewFile
             ? DateTime.now()
-            : (await readMarkdownFile()).created,
-      ));
+            : (await provider.readMarkdownFile(fileId, filename)).created,
+      );
+      provider.initializeEditor(initialNote);
+
       if (isCreateNewFile) {
-        Provider.of<EditorProvider>(context, listen: false)
-            .startEditing(textEditingController);
+        provider.startEditing(textEditingController);
         focusNode.requestFocus();
       }
     });
@@ -203,7 +112,6 @@ $selectedText
                         importImg: () async {
                           final imagePickerHelper = ImagePickerHelper();
                           final path = await imagePickerHelper.pickImagePath();
-                          print(path);
                           provider.addImage(path);
                         },
                         listDots: () {},
@@ -211,9 +119,12 @@ $selectedText
                         checkBox: () {},
                         togglePreview: () => provider.togglePreview(),
                         toggleSplitView: () => provider.toggleSplitMode(),
-                        toggleBold: toggleBold,
-                        toggleItalic: toggleItalic,
-                        toggleCode: toggleCode,
+                        toggleBold: () =>
+                            provider.toggleBold(textEditingController),
+                        toggleItalic: () =>
+                            provider.toggleItalic(textEditingController),
+                        toggleCode: () =>
+                            provider.toggleCode(textEditingController),
                         canRedo: provider.editorData?.redoAble ?? false,
                         canUndo: provider.editorData?.undoAble ?? false,
                       ),
@@ -227,7 +138,7 @@ $selectedText
                 flex: (provider.editorData?.onSplitMode == true) ? 0 : 1,
                 child: Container(
                   height: (provider.editorData?.onSplitMode == true)
-                      ? fullHeight / 2 + (32 + posY)
+                      ? provider.getEditorHeight(fullHeight)
                       : null,
                   padding: EditorView._padding,
                   child: (provider.editorData?.onPreview == false) &&
@@ -244,11 +155,7 @@ $selectedText
               ),
               if (provider.editorData?.onSplitMode == true)
                 VerticalDividerSplitMode(
-                  updateVerticalPosition: (value) {
-                    setState(() {
-                      posY += value;
-                    });
-                  },
+                  updateVerticalPosition: provider.updatePosYEditor,
                   fullHeightScreen: fullHeight,
                 ),
               if (provider.editorData?.onSplitMode == true)

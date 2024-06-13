@@ -10,12 +10,21 @@ class EditorProvider extends ChangeNotifier {
   TextEditingController? _textEditingController;
   EditorDataEntity? _editorData;
   EditorDataEntity? get editorData => _editorData;
+  double posY = 0.0; //
+
   late Debouncer _debouncer;
   late Note _notes;
 
   EditorProvider() {
     _databaseHelper = DatabaseHelper();
     _debouncer = Debouncer(milliseconds: 400);
+  }
+
+  double getEditorHeight(double fullScreenHeight) =>
+      fullScreenHeight / 2 + (32 + posY);
+  void updatePosYEditor(double value) {
+    posY += value;
+    notifyListeners();
   }
 
   Future<String> readNoteContentStr(String filename) async =>
@@ -34,6 +43,7 @@ class EditorProvider extends ChangeNotifier {
       redoAble: false,
     );
     _editorData = newData;
+    posY = 0.0;
     notifyListeners();
   }
 
@@ -162,5 +172,104 @@ class EditorProvider extends ChangeNotifier {
       undoAble: true,
     );
     notifyListeners();
+  }
+
+  Future<Note> readMarkdownFile(String fileId, String filename) async {
+    try {
+      final String contents = await readNoteContentStr(fileId);
+
+      return Note(
+          id: filename.replaceAll(".md", ""),
+          data: contents,
+          created: DateTime.now()); //TODO: replace this create datetime
+    } catch (e) {
+      // If encountering an error, return 0.
+      print(e);
+      rethrow;
+    }
+  }
+
+  toggleBold(TextEditingController textEditingController) {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+
+    final selectedTextWithPrefixs = textEditingController.text.substring(
+        baseOffset > 0 ? baseOffset - 2 : baseOffset, extentOffset + 2);
+    RegExp regex = RegExp(r'^\*\*(.*?)\*\*$');
+
+    print(regex.hasMatch(selectedTextWithPrefixs));
+    print(selectedTextWithPrefixs);
+    print(selectedTextWithPrefixs);
+
+    final replaced = textEditingController.text.replaceRange(
+        regex.hasMatch(selectedTextWithPrefixs) ? baseOffset - 2 : baseOffset,
+        regex.hasMatch(selectedTextWithPrefixs)
+            ? extentOffset + 2
+            : extentOffset,
+        regex.hasMatch(selectedTextWithPrefixs)
+            ? selectedTextWithPrefixs.replaceAll("**", "")
+            : regex.hasMatch(selectedText)
+                ? selectedText.replaceAll("**", "")
+                : "**$selectedText**");
+
+    textEditingController.text = replaced;
+
+    const offset = 2;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: regex.hasMatch(selectedTextWithPrefixs)
+            ? selectedTextWithPrefixs.length - offset
+            : baseOffset + selectedText.length + offset);
+
+    updateMarkdown(replaced);
+  }
+
+  toggleCode(TextEditingController textEditingController) {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+    RegExp regex = RegExp(r'^\`\`\`(.*?)\`\`\`$');
+    final replaced = textEditingController.text.replaceRange(
+        baseOffset,
+        extentOffset,
+        regex.hasMatch(selectedText)
+            ? selectedText.replaceAll("```", "")
+            : """
+```
+$selectedText
+```
+            """);
+    textEditingController.text = replaced;
+    const offset = 4;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: baseOffset + selectedText.length + offset);
+    updateMarkdown(replaced);
+  }
+
+  toggleItalic(TextEditingController textEditingController) {
+    final baseOffset = textEditingController.selection.baseOffset;
+    final extentOffset = textEditingController.selection.extentOffset;
+    final selectedText =
+        textEditingController.text.substring(baseOffset, extentOffset);
+    RegExp regex = RegExp(r'^\_(.*?)\_$');
+    final isAlreadyItalic = regex.hasMatch(selectedText);
+    final replaced = textEditingController.text.replaceRange(
+        baseOffset,
+        extentOffset,
+        isAlreadyItalic
+            ? selectedText.replaceAll("_", "")
+            : "_${selectedText}_");
+    textEditingController.text = replaced;
+
+    const offset = 1;
+    textEditingController.selection = TextSelection.collapsed(
+        offset: isAlreadyItalic
+            ? selectedText.length
+            : baseOffset + selectedText.length + offset);
+
+    updateMarkdown(replaced);
   }
 }
